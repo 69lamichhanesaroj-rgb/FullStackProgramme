@@ -1,23 +1,39 @@
+using System.Text.Json;
+using api;
+using DefaultNamespace;
+using efscaffold.Entities;
+using Infrastructure.Postgres.Scaffolding;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+
 var builder = WebApplication.CreateBuilder(args);
+
+var appoptions = builder.Services.AddAppOptions(builder.Configuration);
+
+Console.WriteLine(JsonSerializer.Serialize(appoptions));
 
 builder.Services.AddDbContext<MyDbContext>(conf =>
 {
-    conf.UseNpsgsql(Server=ep-crimson-surf-a5vn7wan-pooler.us-east-2.aws.neon.tech;DB=neondb;UID=neondb_owner;PWD=npg_p5IUBlhx7tnu;SslMode=require);
+    conf.UseNpgsql(appoptions.DbConnectionString);
 });
 
-var app = builder.Build();
 
-app.MapGet("/", ([FromServices]MyDbContext dbContext) =>
+var app = builder.Build();
+app.MapGet("/", (
+    
+    [FromServices]IOptionsMonitor<AppOptions> optionMonitor,
+    [FromServices]MyDbContext dbContext) =>
 {
     var myFlower = new Flowersystem()
     {
         Title = "flowername",
-        Id = "flowerId"
+        Id = "flowerId",
         Description = "isBigFlower"
-    }
-    dbContext.Flowersystem.add.myFlower;
+    };
+    dbContext.Flowersystems.Add(myFlower);
     dbContext.SaveChanges();
-    var objects = dbContext.Flowersystem.ToList();
+    var objects = dbContext.Flowersystems.ToList();
     return objects;
     
 } );
