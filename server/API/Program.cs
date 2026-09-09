@@ -11,15 +11,23 @@ var builder = WebApplication.CreateBuilder(args);
 
 var appoptions = builder.Services.AddAppOptions(builder.Configuration);
 
-Console.WriteLine(JsonSerializer.Serialize(appoptions));
+Console.WriteLine("the app options are " +JsonSerializer.Serialize(appoptions));
 
 builder.Services.AddDbContext<MyDbContext>(conf =>
 {
     conf.UseNpgsql(appoptions.DbConnectionString);
 });
 
+builder.Services.AddCors();
 
 var app = builder.Build();
+
+app.UseCors(config => config
+    .AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader()
+    .SetIsOriginAllowed(x=> true));
+
 app.MapGet("/", (
     
     [FromServices]IOptionsMonitor<AppOptions> optionMonitor,
